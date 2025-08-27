@@ -1,10 +1,9 @@
 import numpy as np
-from qiskit import QuantumCircuit, Aer, transpile, assemble
-from qiskit.visualization import plot_histogram
-import json
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import AerSimulator
 
 # Use the Aer simulator
-simulator = Aer.get_backend('qasm_simulator')
+simulator = AerSimulator()
 
 def run_bb84(num_qubits=64, eavesdrop=False):
     """
@@ -22,7 +21,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
 
     # --- Step 1: Alice generates her bits and bases ---
     alice_bits = np.random.randint(2, size=num_qubits)
-    alice_bases = np.random.randint(2, size=num_qubits) # 0 for Z basis (+), 1 for X basis (x)
+    alice_bases = np.random.randint(2, size=num_qubits)  # 0 for Z basis (+), 1 for X basis (x)
     logs.append(f"[ALICE] Generated {num_qubits} random bits and bases.")
 
     def encode_qubits(bits, bases):
@@ -30,10 +29,10 @@ def run_bb84(num_qubits=64, eavesdrop=False):
         encoded_qubits = []
         for i in range(len(bits)):
             qc = QuantumCircuit(1, 1)
-            if bases[i] == 0: # Prepare in Z-basis
+            if bases[i] == 0:  # Prepare in Z-basis
                 if bits[i] == 1:
                     qc.x(0)
-            else: # Prepare in X-basis
+            else:  # Prepare in X-basis
                 if bits[i] == 0:
                     qc.h(0)
                 else:
@@ -41,6 +40,17 @@ def run_bb84(num_qubits=64, eavesdrop=False):
                     qc.h(0)
             encoded_qubits.append(qc)
         return encoded_qubits
+
+    def measure_qubit(qc, basis):
+        """Return measurement result of a qubit in given basis without altering original qc."""
+        new_qc = qc.copy()
+        if basis == 1:  # X basis
+            new_qc.h(0)
+        new_qc.measure(0, 0)
+
+        t_qc = transpile(new_qc, simulator)
+        result = simulator.run(t_qc, shots=1).result()
+        return int(list(result.get_counts())[0])
 
     alice_qubits = encode_qubits(alice_bits, alice_bases)
     logs.append("[ALICE] Encoded bits into qubits based on chosen bases.")
@@ -52,37 +62,19 @@ def run_bb84(num_qubits=64, eavesdrop=False):
         intercepted_bits = []
         logs.append("[HACKER ALERT] Eavesdropper (Eve) is intercepting the quantum channel!")
         for i, qc in enumerate(alice_qubits):
-            if eve_bases[i] == 1: # Eve measures in X-basis
-                qc.h(0)
-            qc.measure(0, 0)
-
-            # Simulate the measurement
-            t_qc = transpile(qc, simulator)
-            qobj = assemble(t_qc, shots=1)
-            result = simulator.run(qobj).result()
-            measured_bit = int(list(result.get_counts())[0])
+            measured_bit = measure_qubit(qc, eve_bases[i])
             intercepted_bits.append(measured_bit)
 
         # Eve resends new qubits based on her measurements
         alice_qubits = encode_qubits(intercepted_bits, eve_bases)
         logs.append("[HACKER ALERT] Eve measured the qubits and sent new ones to Bob.")
 
-
     # --- Step 3: Bob measures the qubits ---
     bob_bases = np.random.randint(2, size=num_qubits)
     bob_bits = []
     logs.append("[BOB] Received qubits and is generating his own random bases for measurement.")
     for i in range(num_qubits):
-        qc = alice_qubits[i]
-        if bob_bases[i] == 1: # Measure in X-basis
-            qc.h(0)
-        qc.measure(0, 0)
-
-        # Simulate the measurement
-        t_qc = transpile(qc, simulator)
-        qobj = assemble(t_qc, shots=1)
-        result = simulator.run(qobj).result()
-        measured_bit = int(list(result.get_counts())[0])
+        measured_bit = measure_qubit(alice_qubits[i], bob_bases[i])
         bob_bits.append(measured_bit)
     logs.append("[BOB] Successfully measured all received qubits.")
 
@@ -104,7 +96,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
         return {"status": "Aborted", "key": "", "log": logs}
 
     # They sacrifice a portion of the key to check for errors
-    sample_size = int(sifted_key_len / 2)
+    sample_size = max(1, sifted_key_len // 4)
     bit_check_indices = np.random.choice(range(sifted_key_len), sample_size, replace=False)
 
     mismatches = 0
@@ -117,7 +109,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
     error_rate = mismatches / sample_size if sample_size > 0 else 0
     logs.append(f"[SYSTEM] Calculated error rate: {error_rate:.2%}")
 
-    if error_rate > 0.1: # If error rate is high, assume eavesdropper
+    if error_rate > 0.1:  # If error rate is high, assume eavesdropper
         logs.append("[HACKER DETECTED] High error rate detected! Communication is compromised. Aborting key exchange.")
         return {"status": "Aborted", "key": "", "log": logs}
     else:

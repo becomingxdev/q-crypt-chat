@@ -1,25 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from 'react';
+import { auth } from './firebase';
+// --- THIS IS THE CORRECTED LINE ---
+import { onAuthStateChanged, type User } from 'firebase/auth';
+// --- END OF CORRECTION ---
+import { LoginPage } from './components/LoginPage';
+import { ChatPage } from './components/ChatPage';
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+            <p>Loading...</p>
+        </div>
+    );
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      {user ? <ChatPage /> : <LoginPage />}
+    </>
   );
 }
 

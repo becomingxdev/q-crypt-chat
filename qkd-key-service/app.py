@@ -24,13 +24,13 @@ def generate_key():
         eavesdrop = eavesdrop_str == 'true'
 
         if num_qubits < 16 or num_qubits > 256:
-            return jsonify({"error": "Number of qubits must be between 16 and 256"}), 400
+            return jsonify({"status": "Error", "error": "Number of qubits must be between 16 and 256"}), 400
 
         result = run_bb84(num_qubits, eavesdrop)
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "Error", "error": str(e)}), 500
 
 if __name__ == '__main__':
     # We use port 5001 to avoid conflicts with other services
