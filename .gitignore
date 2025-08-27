@@ -5,3 +5,25 @@ __pycache__/
 
 # Firebase service account key
 serviceAccountKey.json
+
+# Firebase service account key
+serviceAccountKey.json
+
+# Python
+qkd-key-service/venv/
+__pycache__/
+*.pyc
+
+# Node.js (for the React client)
+qkd-chat-client/node_modules/
+qkd-chat-client/build/
+.env.local
+
+# Java / Maven
+qkd-chat-server/target/
+*.jar
+*.war
+
+# IDE files
+.vscode/
+.idea/
