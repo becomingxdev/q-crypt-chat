@@ -1,34 +1,39 @@
 package com.solveIT.qkdchatserver.config;
 
+import com.solveIT.qkdchatserver.security.FirebaseTokenFilter; // <-- NEW IMPORT
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // <-- NEW IMPORT
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // --- NEW CODE BLOCK: Inject our custom filter ---
+    private final FirebaseTokenFilter firebaseTokenFilter;
+
+    public SecurityConfig(FirebaseTokenFilter firebaseTokenFilter) {
+        this.firebaseTokenFilter = firebaseTokenFilter;
+    }
+    // --- END OF NEW CODE BLOCK ---
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF (Cross-Site Request Forgery) since we are using a token-based stateless API
             .csrf(csrf -> csrf.disable())
-
-            // Set the session management to stateless, as we are not using traditional sessions
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-            // Define authorization rules for different endpoints
             .authorizeHttpRequests(auth -> auth
-                // Allow unauthenticated access to the WebSocket handshake endpoints
                 .requestMatchers("/ws/**").permitAll()
-                // All other requests must be authenticated
                 .anyRequest().authenticated()
             );
 
-        // We will add the Firebase token filter here in a later step
+        // --- NEW LINE: Add our filter to the security chain ---
+        // This ensures our filter runs before the default username/password filter.
+        http.addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
