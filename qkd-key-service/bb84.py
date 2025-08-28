@@ -19,7 +19,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
     """
     logs = []
 
-    # --- Step 1: Alice generates her bits and bases ---
+    #Step 1: Alice generates her bits and bases
     alice_bits = np.random.randint(2, size=num_qubits)
     alice_bases = np.random.randint(2, size=num_qubits)  # 0 for Z basis (+), 1 for X basis (x)
     logs.append(f"[ALICE] Generated {num_qubits} random bits and bases.")
@@ -56,7 +56,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
     logs.append("[ALICE] Encoded bits into qubits based on chosen bases.")
     logs.append("[CHANNEL] Alice is sending qubits to Bob...")
 
-    # --- (Optional) Step 2: Eve intercepts and measures ---
+    #Step 2: Eve intercepts and measures
     if eavesdrop:
         eve_bases = np.random.randint(2, size=num_qubits)
         intercepted_bits = []
@@ -69,7 +69,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
         alice_qubits = encode_qubits(intercepted_bits, eve_bases)
         logs.append("[HACKER ALERT] Eve measured the qubits and sent new ones to Bob.")
 
-    # --- Step 3: Bob measures the qubits ---
+    #Step 3: Bob measures the qubits
     bob_bases = np.random.randint(2, size=num_qubits)
     bob_bits = []
     logs.append("[BOB] Received qubits and is generating his own random bases for measurement.")
@@ -78,7 +78,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
         bob_bits.append(measured_bit)
     logs.append("[BOB] Successfully measured all received qubits.")
 
-    # --- Step 4: Sifting - Alice and Bob compare bases ---
+    #Step 4: Sifting - Alice and Bob compare bases
     logs.append("[PUBLIC CHANNEL] Alice and Bob are now publicly comparing their bases.")
     sifted_alice_bits = []
     sifted_bob_bits = []
@@ -90,7 +90,7 @@ def run_bb84(num_qubits=64, eavesdrop=False):
     sifted_key_len = len(sifted_alice_bits)
     logs.append(f"[PUBLIC CHANNEL] Basis comparison complete. {sifted_key_len} bits remain in the sifted key.")
 
-    # --- Step 5: Error Checking / Eavesdropper Detection ---
+    # Step 5: Error Checking / Eavesdropper Detection
     if sifted_key_len == 0:
         logs.append("[ERROR] No matching bases found. Cannot establish a key.")
         return {"status": "Aborted", "key": "", "log": logs}

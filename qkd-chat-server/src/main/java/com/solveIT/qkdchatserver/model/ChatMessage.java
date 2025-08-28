@@ -10,10 +10,10 @@ public class ChatMessage {
         CHAT,
         JOIN,
         LEAVE,
-        QKD_LOG // We'll use this type for sending logs from the QKD process
+        QKD_LOG 
     }
 
-    // Getters and Setters
+    
     public MessageType getType() {
         return type;
     }
