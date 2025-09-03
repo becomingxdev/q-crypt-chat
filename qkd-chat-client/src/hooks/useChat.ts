@@ -33,7 +33,7 @@ export const useChat = () => {
   const connect = async (user: User) => {
     try {
       const token = await user.getIdToken();
-      const socket = new SockJS('http://localhost:8080/ws');
+      const socket = new SockJS('https://qkd-chat-server.onrender.com/ws');
       const client = Stomp.over(socket);
 
       // --- CHANGE 2: Explicitly type 'str' as string ---

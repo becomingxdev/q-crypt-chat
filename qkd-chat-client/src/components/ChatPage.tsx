@@ -54,7 +54,7 @@ export const ChatPage = () => {
     try {
       const token = await user.getIdToken();
 
-      const response = await axios.get('http://localhost:8080/api/qkd/start', {
+      const response = await axios.get('https://qkd-chat-server.onrender.com/api/qkd/start', {
         headers: {
           Authorization: `Bearer ${token}`
         },
