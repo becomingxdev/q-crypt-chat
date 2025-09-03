@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '../firebase';
-import { useChat, type ChatMessage } from '../hooks/useChat';
+import { useChat } from '../hooks/useChat';
 import axios from 'axios';
 
 export const ChatPage = () => {
